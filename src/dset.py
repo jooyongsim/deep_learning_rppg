@@ -9,7 +9,7 @@ import numpy as np
 import os
 import json
 from skimage import data, io, filters
-from fct import get_data, interpolation_ppg
+from src.fct import get_data, interpolation_ppg
 
 class DatasetPhysNetED(Dataset):
     """
@@ -18,7 +18,8 @@ class DatasetPhysNetED(Dataset):
     def __init__(self, cfgdict, start = 0, end = None, overlap= 0.5, ppg_offset = 6):
 
         # Load video image list
-        self.vdir = cfgdict['videodataDIR']
+        vdir = cfgdict['videodataDIR']
+        self.vdir = vdir
         vfl = os.listdir(vdir)
                 
         if end == None:
@@ -64,7 +65,7 @@ class DatasetPhysNetED(Dataset):
         vfpath = os.path.join(vdir,vfl[0])
         img = io.imread(vfpath)
 
-        dpath = "haarcascade_frontalface_alt.xml"
+        dpath = "./config/haarcascade_frontalface_alt.xml"
         if not os.path.exists(dpath):
             print("Cascade file not present!")
         face_cascade = cv2.CascadeClassifier(dpath)
