@@ -20,7 +20,7 @@ class DatasetPhysNetED(Dataset):
         # Load video image list
         vdir = cfgdict['videodataDIR']
         self.vdir = vdir
-        vfl = os.listdir(vdir)
+        vfl = sorted(os.listdir(vdir))
                 
         if end == None:
             end = len(vfl)
@@ -38,9 +38,8 @@ class DatasetPhysNetED(Dataset):
         self.time_ns = np.array(time_ns)
         self.ppg = np.array(ppg)
 
-        fl = os.listdir(self.sigdir[:-5])
         imgt = list()
-        for fn in fl:
+        for fn in vfl:
             imgt.append(int(os.path.splitext(fn)[0][5:]))
         imgt = np.array(imgt)        
         imgt2 = (imgt - imgt[0])/1e6
