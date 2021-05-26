@@ -84,7 +84,8 @@ if __name__ == '__main__':
     print(f'overlap: {overlap}')
     print(f'batch_size: {batch_size}')
 
-    trainset = DatasetPhysNetED(cfgdict, start = 0, end = 1600, overlap = overlap)
+    ppg_offset = 6 # PURE 01-01
+    trainset = DatasetPhysNetED(cfgdict, start = 0, end = 1600, overlap = overlap, ppg_offset = ppg_offset)
     testset = DatasetPhysNetED(cfgdict, start = 1601, end = 2009, overlap = 1)
 
     # Construct DataLoaders

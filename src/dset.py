@@ -9,12 +9,14 @@ import numpy as np
 import os
 import json
 from skimage import data, io, filters
+from fct import get_data, interpolation_ppg
+import neurokit2 as nk
 
 class DatasetPhysNetED(Dataset):
     """
         Dataset class for PhysNet neural network.
     """
-    def __init__(self, cfgdict, start = 0, end = None, overlap= 0.5):
+    def __init__(self, cfgdict, start = 0, end = None, overlap= 0.5, ppg_offset = 6):
 
         # Load video image list
         self.vdir = cfgdict['videodataDIR']
@@ -22,7 +24,7 @@ class DatasetPhysNetED(Dataset):
                 
         if end == None:
             end = len(vfl)
-        self.vfl = vfl[start:end]
+        self.vfl = vfl[start:end-ppg_offset]
         
         # Load PPG signals
         self.sigdir = cfgdict['signalpath']
@@ -34,8 +36,21 @@ class DatasetPhysNetED(Dataset):
             time_ns.append(dat['Timestamp'])
             ppg.append(dat['Value']['waveform'])
         self.time_ns = np.array(time_ns)
-        self.ppg = np.array(ppg)[start*2:end*2:2]
-                
+        self.ppg = np.array(ppg)
+
+        fl = os.listdir(self.sigdir[:-5])
+        imgt = list()
+        for fn in fl:
+            imgt.append(int(os.path.splitext(fn)[0][5:]))
+        imgt = np.array(imgt)        
+        imgt2 = (imgt - imgt[0])/1e6
+        time_ns2 = (time_ns - imgt[0])/1e6
+
+        ppg = interpolation_ppg(imgt2, time_ns2, ppg, normalize = True)
+        ppg = np.array(ppg)[ppg_offset:]
+        self.ppg = ppg
+
+        # Image config
         self.depth = int(cfgdict['depth'])
         self.height = int(cfgdict['height'])
         self.width = int(cfgdict['width'])
