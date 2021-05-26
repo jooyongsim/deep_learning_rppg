@@ -10,7 +10,6 @@ import os
 import json
 from skimage import data, io, filters
 from fct import get_data, interpolation_ppg
-import neurokit2 as nk
 
 class DatasetPhysNetED(Dataset):
     """
