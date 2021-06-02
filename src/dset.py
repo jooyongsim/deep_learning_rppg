@@ -97,6 +97,8 @@ class DatasetPhysNetED(Dataset):
         # ppg = self.ppg
         vdir = self.vdir
             
+        # TODO: Add temporal jitter
+        
         video = torch.empty(channel, depth, height, width, dtype=torch.float)
         for cnt, fn in enumerate(self.vfl[idx * shift : idx*shift + depth ]):
             vfpath = os.path.join(vdir,fn)
@@ -107,6 +109,7 @@ class DatasetPhysNetED(Dataset):
             img = ToTensor()(img)
             img = torch.sub(img, torch.mean(img, (1, 2)).view(3, 1, 1))  # spatial intensity norm for each channel
 
+            # TODO: add jitter and flip
             video[:, cnt, :, :] = img  # video -> C, D, H, W
                          
             # Swap axes because  numpy image: H x W x C | torch image: C X H X W
