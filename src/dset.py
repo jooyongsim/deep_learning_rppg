@@ -2,6 +2,7 @@
 PyTorch Dataset classes for dataloader
 """
 import torch
+import torchvision
 from torch.utils.data import Dataset
 from torchvision.transforms import RandomRotation, ToPILImage, ToTensor, ColorJitter
 import cv2
@@ -15,8 +16,12 @@ class DatasetPhysNetED(Dataset):
     """
         Dataset class for PhysNet neural network.
     """
-    def __init__(self, cfgdict, start = 0, end = None, overlap= 0.5, ppg_offset = 6):
+    def __init__(self, cfgdict, start = 0, end = None,
+                overlap= 0.5, ppg_offset = 6,
+                hflip=False, rand_shift=False):
 
+        self.hflip = hflip
+        self.random_shift = rand_shift
         # Load video image list
         vdir = cfgdict['videodataDIR']
         self.vdir = vdir
@@ -26,6 +31,8 @@ class DatasetPhysNetED(Dataset):
             end = len(vfl)
         self.vfl = vfl[start:end-ppg_offset]
         
+        self.start = start
+        self.end = end
         # Load PPG signals
         self.sigdir = cfgdict['signalpath']
         with open(self.sigdir, "r") as st_json:
@@ -46,7 +53,7 @@ class DatasetPhysNetED(Dataset):
         time_ns2 = (time_ns - imgt[0])/1e6
 
         ppg = interpolation_ppg(imgt2, time_ns2, ppg, normalize = True)
-        ppg = np.array(ppg)[ppg_offset:]
+        ppg = np.array(ppg)[self.start + ppg_offset:self.end]
         self.ppg = ppg
 
         # Image config
@@ -54,7 +61,7 @@ class DatasetPhysNetED(Dataset):
         self.height = int(cfgdict['height'])
         self.width = int(cfgdict['width'])
         self.channel = 3
-
+        self.overlap = overlap
         self.shift = int(self.depth*(1-overlap))  # overlap, s.t., 0=< overlap < 1
         self.num_samples = (end - start - self.depth)//self.shift+1
 
@@ -98,9 +105,26 @@ class DatasetPhysNetED(Dataset):
         vdir = self.vdir
             
         # TODO: Add temporal jitter
-        
         video = torch.empty(channel, depth, height, width, dtype=torch.float)
-        for cnt, fn in enumerate(self.vfl[idx * shift : idx*shift + depth ]):
+        
+        if self.random_shift:
+            rand_offset = int(depth*(1-self.overlap)*0.5)
+            rand_shift = random.randint(-rand_offset, rand_offset)
+        else:
+            rand_shift = 0
+        
+        start_frame = idx * shift + rand_shift
+        end_frame = idx * shift + depth + rand_shift
+
+        while self.start+start_frame < self.start:
+            start_frame += 1
+            end_frame += 1
+
+        while self.start + end_frame >= self.end or self.start + end_frame >= len(self.ppg) + self.start:
+            start_frame -= 1
+            end_frame -= 1
+
+        for cnt, fn in enumerate(self.vfl[start_frame : end_frame]):
             vfpath = os.path.join(vdir,fn)
             img = io.imread(vfpath)
             if self.crop:        
@@ -110,6 +134,11 @@ class DatasetPhysNetED(Dataset):
             img = torch.sub(img, torch.mean(img, (1, 2)).view(3, 1, 1))  # spatial intensity norm for each channel
 
             # TODO: add jitter and flip
+            if self.hflip:
+                rand_flip = bool(random.getrandbits(1))
+                if rand_flip:
+                    img = torchvision.transforms.functional.hflip(img)
+
             video[:, cnt, :, :] = img  # video -> C, D, H, W
                          
             # Swap axes because  numpy image: H x W x C | torch image: C X H X W
@@ -117,6 +146,6 @@ class DatasetPhysNetED(Dataset):
 #             img = img.permute(2, 0, 1)
 #             img =/ 255. # convert image to [0, 1]
 #                     img = tr.sub(img, tr.mean(img, (1, 2)).view(3, 1, 1))  # Color channel centralization
-        target = self.ppg[idx * shift : idx*shift + depth]
+        target = self.ppg[start_frame :  end_frame]
         target = torch.tensor(target, dtype=torch.float)
         return video, target
