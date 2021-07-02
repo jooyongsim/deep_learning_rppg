@@ -31,6 +31,7 @@ def get_data(fd):
     time_ns = np.array(time_ns)
     ppg = np.array(ppg)
     fl = os.listdir(FOLDER_PATH)
+    fl = sorted(fl)
     imgt = list()
     for fn in fl:
         imgt.append(int(os.path.splitext(fn)[0][5:]))
