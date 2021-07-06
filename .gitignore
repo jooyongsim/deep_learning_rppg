@@ -1,9 +1,2 @@
-checkpoints/
-notebook/
-*.ipynb
 __pycache__/
 .ipynb_checkpoints
-!PURE_PhysNet_v8_WIP_NaN_Error.ipynb
-*.pth
-!PURE_PhysNet_v8_WIP_NaN_Error_v2.ipynb
-*.npy
