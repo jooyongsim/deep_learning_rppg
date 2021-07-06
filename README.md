@@ -13,8 +13,8 @@ rppg_project/PURE/09-01
 rppg_project/PURE/10-01
 ```
 
-데이터는 연구실 NAS의 Photo 폴더에서 다운받을 수 있습니다.
-일단 위에 코드를 실행해보려면 01-01, 02-01, 09-01, 10-01 만 다운받으시면 됩니다.
+Data can be downloaded from the Photo folder of the lab NAS. 
+To run the notebook code above, you only need to download 01-01, 02-01, 09-01, and 10-01.
 
 ## Test
 Look into "PURE_PhysNetED_v7_SIM_Clean.ipynb"
