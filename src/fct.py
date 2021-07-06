@@ -31,6 +31,7 @@ def get_data(fd):
     time_ns = np.array(time_ns)
     ppg = np.array(ppg)
     fl = os.listdir(FOLDER_PATH)
+    fl = sorted(fl)
     imgt = list()
     for fn in fl:
         imgt.append(int(os.path.splitext(fn)[0][5:]))
@@ -66,7 +67,12 @@ def interpolation_ppg(imgt, time_ns, ppg, normalize = True):
                 ppg_idx3 += 1
             diff1 = (time_ns[ppg_idx3] - imgt[img_idx]) / (time_ns[ppg_idx3] - time_ns[ppg_idx2])
             diff2 = (imgt[img_idx] - time_ns[ppg_idx2]) / (time_ns[ppg_idx3] - time_ns[ppg_idx2])
-            new_ppg = ppg[ppg_idx2] * diff1 + ppg[ppg_idx3] * diff2
+            if diff1 < 0 or diff2 < 0:
+                diff1 = (imgt[img_idx] - time_ns[ppg_idx1]) / (time_ns[ppg_idx2] - time_ns[ppg_idx1])
+                diff2 = (time_ns[ppg_idx2] - imgt[img_idx]) / (time_ns[ppg_idx2] - time_ns[ppg_idx1])
+                new_ppg = ppg[ppg_idx2] * diff1 + ppg[ppg_idx1] * diff2
+            else:
+                new_ppg = ppg[ppg_idx2] * diff1 + ppg[ppg_idx3] * diff2
             itp_ppgs.append(new_ppg)
         if ppg_idx2 + 2 < len(time_ns):
             time_delay = time_ns[ppg_idx2+2]-time_ns[ppg_idx2] - 15 * err
